@@ -93,8 +93,13 @@ export function KeyRow({
             Completed
           </label>
         )}
-        <button type="button" className="button button--quiet" onClick={onRemove}>
-          Remove<span className="fe-visually-hidden"> key {number}</span>
+        <button
+          type="button"
+          className="button button--quiet"
+          aria-label={`Remove key ${number}`}
+          onClick={onRemove}
+        >
+          Remove
         </button>
       </span>
     </li>
