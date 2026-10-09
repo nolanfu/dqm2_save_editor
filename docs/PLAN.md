@@ -1,6 +1,6 @@
 # DWM2 Save Editor — Plan
 
-Status: milestones 1–4 done (except CI/Pages); end-to-end tests are deferred.
+Status: v1 complete pending a first deploy; end-to-end tests are deferred.
 
 ## Goals
 
@@ -231,15 +231,15 @@ interface Preset {
 
 ## Milestones
 
-1. ✅ **Scaffold:** workspaces, TS/ESLint/Prettier, Vitest, `.gitattributes`. (CI + Pages: in progress.)
+1. ✅ **Scaffold:** workspaces, TS/ESLint/Prettier, Vitest, `.gitattributes`, CI + Pages workflow.
 2. ✅ **Core:** bytes/diff/IPS/file helpers + section framework + export pipeline, fully unit-tested.
-3. ✅ **Magic key format:** codec, model, operations, presets, prefix/suffix names. Fixture tests pending.
+3. ✅ **Magic key format:** codec, model, operations, presets, prefix/suffix names, fixture tests.
 4. ✅ **UI:** loader, key list editor, presets, download; component tests; mobile layout checked.
-5. **Polish:** README, error states. E2E deferred.
+5. ✅ **Polish:** README. E2E deferred.
 
 ## Open items
 
-- Story key names (`0x01–0x0C`).
-- Story IDs that count as "post-game".
+- Story key names (`0x01–0x0C`) are unknown; the UI shows hex ids.
 - Suffix `0x38`: in the documented range but has no known name; verify in-game.
-- Example save files (committed under `apps/dwm2-save-editor/tests/fixtures/`).
+- The example save has two entries with byte 0 = `0x00` and random-key-like bytes 1–3
+  (`00 09 1C 28`, `00 0E 05 63`). They're preserved as unknown entries; their meaning is not yet known.
