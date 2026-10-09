@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { PREFIX_IDS, SUFFIX_IDS, prefixName, suffixName } from './names.ts';
+import {
+  PREFIX_IDS,
+  SUFFIX_IDS,
+  idLabel,
+  prefixName,
+  storyKeyLabel,
+  storyKeyName,
+  suffixName,
+} from './names.ts';
 
 describe('key names', () => {
   it('names prefixes and suffixes from the game tables', () => {
@@ -9,8 +17,11 @@ describe('key names', () => {
     expect(suffixName(0x37)).toBe('Star');
   });
 
-  it('falls back to a hex label for unnamed ids', () => {
-    expect(suffixName(0x38)).toBe('Suffix 0x38');
+  it('labels named ids with name and hex, unnamed ids with hex only', () => {
+    expect(idLabel(prefixName(0x03), 0x03)).toBe('Blue (03)');
+    expect(idLabel(suffixName(0x38), 0x38)).toBe('0x38');
+    expect(idLabel(storyKeyName(0x06), 0x06)).toBe('0x06');
+    expect(storyKeyLabel(0x0c)).toBe('story key 0x0C');
   });
 
   it('covers the full editable ranges', () => {

@@ -1,11 +1,11 @@
-import { toHex } from '@file-editor/core';
 import { useId } from 'react';
+import { idLabel } from '../names.ts';
 
 interface IdSelectProps {
   label: string;
   value: number;
   ids: readonly number[];
-  nameOf(id: number): string;
+  nameOf(id: number): string | undefined;
   onChange(id: number): void;
 }
 
@@ -17,7 +17,7 @@ export function IdSelect({ label, value, ids, nameOf, onChange }: IdSelectProps)
       <select id={id} value={value} onChange={(event) => onChange(Number(event.target.value))}>
         {ids.map((option) => (
           <option key={option} value={option}>
-            {nameOf(option)} ({toHex(option)})
+            {idLabel(nameOf(option), option)}
           </option>
         ))}
       </select>

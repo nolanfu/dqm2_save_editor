@@ -1,6 +1,6 @@
 import type { KeySlot, MagicKeys } from './model.ts';
 import { appendSlots } from './operations.ts';
-import { storyKeyName } from './names.ts';
+import { storyKeyLabel } from './names.ts';
 
 export type PresetResult =
   { ok: true; model: MagicKeys; message: string } | { ok: false; error: string };
@@ -12,8 +12,9 @@ export interface Preset {
   apply(model: MagicKeys): PresetResult;
 }
 
-// TODO: fill in the story key ids that count as post-game.
-export const POST_GAME_STORY_KEY_IDS: readonly number[] = [];
+export const POST_GAME_STORY_KEY_IDS: readonly number[] = [
+  0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c,
+];
 
 /**
  * Builds a preset that adds each listed story key that isn't already present (as not
@@ -49,7 +50,7 @@ export function makeAddStoryKeysPreset(
         ok: true,
         model: result.model,
         message: `Added ${missing.length} ${missing.length === 1 ? 'key' : 'keys'}: ${missing
-          .map(storyKeyName)
+          .map(storyKeyLabel)
           .join(', ')}.`,
       };
     },

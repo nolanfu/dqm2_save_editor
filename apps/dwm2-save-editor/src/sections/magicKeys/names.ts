@@ -1,8 +1,7 @@
 import { toHex } from '@file-editor/core';
 import { PREFIX_MAX, STORY_ID_MAX, STORY_ID_MIN, SUFFIX_MAX } from './format.ts';
 
-// Missing entries fall back to a hex label.
-// TODO: story key names.
+// Ids without a known name are displayed as hex. Story key names aren't known yet.
 const STORY_KEY_NAMES: Partial<Record<number, string>> = {};
 
 const PREFIX_NAMES: Partial<Record<number, string>> = {
@@ -84,16 +83,26 @@ const SUFFIX_NAMES: Partial<Record<number, string>> = {
   0x37: 'Star',
 };
 
-export function storyKeyName(id: number): string {
-  return STORY_KEY_NAMES[id] ?? `Story key 0x${toHex(id)}`;
+export function storyKeyName(id: number): string | undefined {
+  return STORY_KEY_NAMES[id];
 }
 
-export function prefixName(id: number): string {
-  return PREFIX_NAMES[id] ?? `Prefix 0x${toHex(id)}`;
+export function prefixName(id: number): string | undefined {
+  return PREFIX_NAMES[id];
 }
 
-export function suffixName(id: number): string {
-  return SUFFIX_NAMES[id] ?? `Suffix 0x${toHex(id)}`;
+export function suffixName(id: number): string | undefined {
+  return SUFFIX_NAMES[id];
+}
+
+/** Display label for an id: `Blue (03)` when named, `0x03` otherwise. */
+export function idLabel(name: string | undefined, id: number): string {
+  return name ? `${name} (${toHex(id)})` : `0x${toHex(id)}`;
+}
+
+/** Label for a story key in running text, e.g. `story key 0x06`. */
+export function storyKeyLabel(id: number): string {
+  return storyKeyName(id) ?? `story key 0x${toHex(id)}`;
 }
 
 function range(min: number, max: number): number[] {
