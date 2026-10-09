@@ -1,0 +1,10 @@
+* text=auto eol=lf
+
+# Binary fixtures must never go through line-ending conversion.
+*.sav binary
+*.srm binary
+*.ips binary
+*.bin binary
+*.gb binary
+*.gbc binary
+*.png binary

@@ -1,0 +1,14 @@
+{
+  "name": "@file-editor/core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Game-agnostic building blocks for in-browser binary file editors: IPS patching, byte diffing, file I/O, and a section framework.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./react": "./src/react/index.ts"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  }
+}
