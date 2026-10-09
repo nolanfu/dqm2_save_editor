@@ -19,13 +19,12 @@ describe('key names', () => {
 
   it('labels named ids with name and hex, unnamed ids with hex only', () => {
     expect(idLabel(prefixName(0x03), 0x03)).toBe('Blue (03)');
-    expect(idLabel(suffixName(0x38), 0x38)).toBe('0x38');
     expect(idLabel(storyKeyName(0x06), 0x06)).toBe('0x06');
     expect(storyKeyLabel(0x0c)).toBe('story key 0x0C');
   });
 
   it('covers the full editable ranges', () => {
     expect(PREFIX_IDS).toHaveLength(16);
-    expect(SUFFIX_IDS).toHaveLength(0x39);
+    expect(SUFFIX_IDS).toHaveLength(0x38);
   });
 });

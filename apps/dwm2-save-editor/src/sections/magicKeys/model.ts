@@ -12,6 +12,11 @@ export type KeySlot =
       suffix: number;
       level: number;
       completed: boolean;
+      /**
+       * Whether byte 0 has the 0x80 random-key bit. Real saves contain random keys whose byte 0
+       * is 0x00 (reason unknown); they're kept as-is. New keys always set it.
+       */
+      randomFlag: boolean;
     }
   /** Bytes that match no known pattern; preserved verbatim. */
   | { kind: 'unknown'; raw: RawEntry };
@@ -21,4 +26,9 @@ export type FilledKeySlot = Exclude<KeySlot, { kind: 'empty' }>;
 /** All 32 slots in file order. Valid files keep filled slots first and empties last. */
 export interface MagicKeys {
   slots: readonly KeySlot[];
+  /**
+   * For each slot, the index it occupied in the file as loaded, or null for keys added since.
+   * Not written to the file; used to show which keys are new or edited.
+   */
+  origins: readonly (number | null)[];
 }

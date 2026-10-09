@@ -1,5 +1,6 @@
 import type { SectionEditorProps } from '@file-editor/core/react';
 import { useState } from 'react';
+import { slotChange, summarizeChanges, type ChangeSummary } from './changes.ts';
 import { AddKeyControls } from './components/AddKeyControls.tsx';
 import { KeyRow } from './components/KeyRow.tsx';
 import { KEY_SLOT_COUNT } from './format.ts';
@@ -18,10 +19,20 @@ import { PRESETS } from './presets.ts';
 
 type Notice = { tone: 'info' | 'error'; text: string } | null;
 
-export function MagicKeysEditor({ model, onChange }: SectionEditorProps<MagicKeys>) {
+function describeChanges({ added, edited, removed }: ChangeSummary): string | null {
+  const parts = [
+    added && `${added} added`,
+    edited && `${edited} edited`,
+    removed && `${removed} removed`,
+  ].filter(Boolean);
+  return parts.length > 0 ? `Unsaved changes: ${parts.join(' · ')}` : null;
+}
+
+export function MagicKeysEditor({ original, model, onChange }: SectionEditorProps<MagicKeys>) {
   const [notice, setNotice] = useState<Notice>(null);
   const used = usedSlotCount(model);
   const full = used >= KEY_SLOT_COUNT;
+  const changes = describeChanges(summarizeChanges(original, model));
 
   function edit(next: MagicKeys) {
     setNotice(null);
@@ -68,6 +79,7 @@ export function MagicKeysEditor({ model, onChange }: SectionEditorProps<MagicKey
 
       <p className="magic-keys__count">
         {used} of {KEY_SLOT_COUNT} slots used
+        {changes && <span className="magic-keys__changes"> — {changes}</span>}
       </p>
 
       {used === 0 ? (
@@ -80,6 +92,7 @@ export function MagicKeysEditor({ model, onChange }: SectionEditorProps<MagicKey
               key={index}
               index={index}
               slot={slot}
+              change={slotChange(original, model, index)}
               onStoryIdChange={(storyId) => edit(setStoryId(model, index, storyId))}
               onRandomChange={(fields) => edit(setRandomFields(model, index, fields))}
               onCompletedChange={(completed) => edit(setCompleted(model, index, completed))}

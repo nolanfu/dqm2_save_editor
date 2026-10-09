@@ -7,7 +7,7 @@ import {
   KEY_LIST_SIZE,
   encodeEntry,
 } from '../../src/sections/magicKeys/format.ts';
-import type { KeySlot, MagicKeys } from '../../src/sections/magicKeys/model.ts';
+import type { MagicKeys } from '../../src/sections/magicKeys/model.ts';
 import { addRandomKey, removeKey } from '../../src/sections/magicKeys/operations.ts';
 import { PRESETS } from '../../src/sections/magicKeys/presets.ts';
 import { magicKeysSection } from '../../src/sections/magicKeys/section.ts';
@@ -22,7 +22,6 @@ function exportWith(original: Uint8Array, model: MagicKeys) {
   return buildPatchedFile(original, [sectionWrite(magicKeysSection, model)]);
 }
 
-const unknown = (...raw: [number, number, number, number]): KeySlot => ({ kind: 'unknown', raw });
 const postGamePreset = PRESETS.find((preset) => preset.id === 'post-game-keys')!;
 
 describe('fixture: dwm2_ultimate_cobi_new.sav', () => {
@@ -41,8 +40,8 @@ describe('fixture: dwm2_ultimate_cobi_new.sav', () => {
         story(0x04, true),
         random(0x00, 0x09, 0x37, 0x20, true),
         story(0x05, true),
-        // Byte 0 is 0x00: looks like a random key without the random flag. Not understood yet.
-        unknown(0x00, 0x09, 0x1c, 0x28),
+        // Random keys whose byte 0 is 0x00 (no random flag). Reason unknown; kept as-is.
+        random(0x00, 0x09, 0x1c, 0x28, false, false),
         random(0x01, 0x0b, 0x32, 0x2d, true),
         random(0x02, 0x0d, 0x07, 0x59, true),
         random(0x03, 0x0d, 0x02, 0x59, true),
@@ -55,7 +54,7 @@ describe('fixture: dwm2_ultimate_cobi_new.sav', () => {
         random(0x08, 0x0f, 0x04, 0x63),
         random(0x09, 0x0b, 0x03, 0x63, true),
         random(0x0a, 0x0b, 0x01, 0x63, true),
-        unknown(0x00, 0x0e, 0x05, 0x63),
+        random(0x00, 0x0e, 0x05, 0x63, false, false),
         story(0x08),
         story(0x09),
         story(0x0a),

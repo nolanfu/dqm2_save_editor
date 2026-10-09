@@ -56,6 +56,13 @@ describe('addStoryKey / addRandomKey', () => {
     expect(result.ok && result.model.slots[1]).toEqual(random(8, 2, 3, 40));
   });
 
+  it('marks appended keys as having no origin, and sets the random flag', () => {
+    const result = addRandomKey(modelOf(story(1)), { prefix: 0, suffix: 0, level: 1 });
+    if (!result.ok) throw new Error(result.error);
+    expect(result.model.origins.slice(0, 2)).toEqual([0, null]);
+    expect(result.model.slots[1]).toMatchObject({ randomFlag: true });
+  });
+
   it('allows duplicates', () => {
     const result = addStoryKey(modelOf(story(4)), 4);
     expect(result.ok).toBe(true);
@@ -74,7 +81,7 @@ describe('addStoryKey / addRandomKey', () => {
     expect(() => addStoryKey(modelOf(), 0)).toThrow(RangeError);
     expect(() => addStoryKey(modelOf(), 0x0d)).toThrow(RangeError);
     expect(() => addRandomKey(modelOf(), { prefix: 0x10, suffix: 0, level: 1 })).toThrow();
-    expect(() => addRandomKey(modelOf(), { prefix: 0, suffix: 0x39, level: 1 })).toThrow();
+    expect(() => addRandomKey(modelOf(), { prefix: 0, suffix: 0x38, level: 1 })).toThrow();
     expect(() => addRandomKey(modelOf(), { prefix: 0, suffix: 0, level: 0 })).toThrow();
     expect(() => addRandomKey(modelOf(), { prefix: 0, suffix: 0, level: 100 })).toThrow();
   });
@@ -85,6 +92,13 @@ describe('removeKey', () => {
     const model = removeKey(modelOf(story(1), story(2), story(3)), 1);
     expect(model.slots).toHaveLength(32);
     expect(model.slots.slice(0, 3)).toEqual([story(1), story(3), { kind: 'empty' }]);
+  });
+
+  it('keeps track of where each key came from as later keys shift forward', () => {
+    const model = removeKey(modelOf(story(1), story(2), story(3)), 0);
+    expect(model.origins.slice(0, 3)).toEqual([1, 2, 3]);
+    expect(model.origins).toHaveLength(32);
+    expect(model.origins[31]).toBeNull();
   });
 
   it('can remove unknown entries', () => {
@@ -105,8 +119,8 @@ describe('field edits', () => {
   });
 
   it('changes random key fields, keeping the serial', () => {
-    const model = setRandomFields(modelOf(random(4, 1, 1, 1)), 0, { suffix: 0x38, level: 99 });
-    expect(model.slots[0]).toEqual(random(4, 1, 0x38, 99));
+    const model = setRandomFields(modelOf(random(4, 1, 1, 1)), 0, { suffix: 0x37, level: 99 });
+    expect(model.slots[0]).toEqual(random(4, 1, 0x37, 99));
   });
 
   it('allows editing a loaded key whose level is 0 without touching the level', () => {

@@ -20,7 +20,7 @@ export const magicKeysSection: Section<MagicKeys> = {
       const at = KEY_LIST_OFFSET + i * KEY_ENTRY_SIZE;
       slots.push(decodeEntry([bytes[at]!, bytes[at + 1]!, bytes[at + 2]!, bytes[at + 3]!]));
     }
-    return { slots };
+    return { slots, origins: slots.map((_, i) => i) };
   },
 
   serialize(model, target) {

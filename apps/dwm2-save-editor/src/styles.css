@@ -13,6 +13,10 @@
   --story: #6b3fb8;
   --random: #1d7a55;
   --unknown: #a35a00;
+  --added: #1a7f37;
+  --added-bg: #eaf7ee;
+  --edited: #b35c00;
+  --edited-bg: #fff4e5;
   --radius: 8px;
   color-scheme: light dark;
   font-family:
@@ -40,6 +44,10 @@
     --story: #b996f2;
     --random: #6fd3a6;
     --unknown: #f0b060;
+    --added: #4fd178;
+    --added-bg: #15291c;
+    --edited: #f0a040;
+    --edited-bg: #2e2312;
   }
 }
 
@@ -201,7 +209,46 @@ body {
   gap: 8px 12px;
   padding: 8px 12px;
   border: 1px solid var(--border);
+  border-left-width: 4px;
   border-radius: 6px;
+}
+
+.key-row--added {
+  border-left-color: var(--added);
+  background: var(--added-bg);
+}
+
+.key-row--edited {
+  border-left-color: var(--edited);
+  background: var(--edited-bg);
+}
+
+.key-row__tags {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.change-tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 1px 8px;
+  border-radius: 999px;
+  color: var(--surface);
+}
+
+.change-tag--added {
+  background: var(--added);
+}
+
+.change-tag--edited {
+  background: var(--edited);
+}
+
+.magic-keys__changes {
+  color: var(--text);
+  font-weight: 600;
 }
 
 .key-row__index {
@@ -223,7 +270,6 @@ body {
 }
 
 .badge {
-  justify-self: start;
   font-size: 0.8rem;
   font-weight: 600;
   padding: 2px 8px;
@@ -298,6 +344,10 @@ input[aria-invalid='true'] {
 @media (max-width: 640px) {
   .key-row {
     grid-template-columns: auto 1fr;
+  }
+
+  .key-row__tags {
+    flex-direction: row;
   }
 
   .key-row__fields,

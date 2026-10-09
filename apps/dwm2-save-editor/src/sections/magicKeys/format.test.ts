@@ -23,8 +23,8 @@ describe('decodeEntry', () => {
       { serial: 0x00, prefix: 0x00, suffix: 0x00, level: 0x00, completed: false },
     ],
     [
-      [0xbe, 0x0f, 0x38, 0x63],
-      { serial: 0x3e, prefix: 0x0f, suffix: 0x38, level: 0x63, completed: false },
+      [0xbe, 0x0f, 0x37, 0x63],
+      { serial: 0x3e, prefix: 0x0f, suffix: 0x37, level: 0x63, completed: false },
     ],
     [
       [0xc5, 0x03, 0x10, 0x20],
@@ -35,7 +35,20 @@ describe('decodeEntry', () => {
       { serial: 0x3e, prefix: 0x00, suffix: 0x00, level: 0x01, completed: true },
     ],
   ] as const)('decodes random key %j', (raw, fields) => {
-    expect(decodeEntry(raw)).toEqual({ kind: 'random', ...fields });
+    expect(decodeEntry(raw)).toEqual({ kind: 'random', ...fields, randomFlag: true });
+  });
+
+  it.each([
+    [
+      [0x00, 0x09, 0x1c, 0x28],
+      { serial: 0x00, prefix: 0x09, suffix: 0x1c, level: 0x28, completed: false },
+    ],
+    [
+      [0x45, 0x0e, 0x05, 0x63],
+      { serial: 0x05, prefix: 0x0e, suffix: 0x05, level: 0x63, completed: true },
+    ],
+  ] as const)('decodes random key without the random flag %j', (raw, fields) => {
+    expect(decodeEntry(raw)).toEqual({ kind: 'random', ...fields, randomFlag: false });
   });
 
   it.each([
@@ -47,7 +60,8 @@ describe('decodeEntry', () => {
     ['random serial 0x3F', [0xbf, 0x00, 0x00, 0x01]],
     ['completed random serial 0x3F', [0xff, 0x00, 0x00, 0x01]],
     ['random prefix 0x10', [0x80, 0x10, 0x00, 0x01]],
-    ['random suffix 0x39', [0x80, 0x00, 0x39, 0x01]],
+    ['random suffix 0x38', [0x80, 0x00, 0x38, 0x01]],
+    ['flagless random suffix 0x38', [0x00, 0x00, 0x38, 0x01]],
     ['random level 0x64', [0x80, 0x00, 0x00, 0x64]],
     ['partly empty', [0xff, 0xff, 0xff, 0x80]],
   ] as const)('treats %s as unknown', (_name, raw) => {
@@ -71,6 +85,7 @@ describe('encodeEntry', () => {
       for (const tail of [
         [0xff, 0xff, 0x80],
         [0x00, 0x00, 0x01],
+        [0x0f, 0x37, 0x63],
         [0x0f, 0x38, 0x63],
         [0xff, 0xff, 0xff],
       ]) {

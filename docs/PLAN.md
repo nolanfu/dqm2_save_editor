@@ -133,8 +133,10 @@ and a future diff view straightforward. A reload clears all state, which is acce
   - Story: `0x01–0x0C` (completed: `0x41–0x4C`).
   - Random: `0x80–0xBE` (completed: `0xC0–0xFE`). The low 6 bits are not well understood ("seed"/serial; they seem to increase with each generated key).
 - Byte 1: prefix. `0xFF` for story/empty; `0x00–0x0F` for random.
-- Byte 2: suffix. `0xFF` for story/empty; `0x00–0x38` for random.
+- Byte 2: suffix. `0xFF` for story/empty; `0x00–0x37` for random.
 - Byte 3: monster level. `0x80` for story; `0x01–0x63` expected for random (`0x00` is accepted on parse).
+- Random keys are recognized by bytes 1–3. Real saves contain random keys whose byte 0 is `0x00`
+  (no random flag; reason unknown). The flag is recorded per key and written back as found; new keys set it.
 - Filled entries must be contiguous and in order, with empties at the end. Order matters.
 
 ### Model
@@ -237,9 +239,14 @@ interface Preset {
 4. ✅ **UI:** loader, key list editor, presets, download; component tests; mobile layout checked.
 5. ✅ **Polish:** README. E2E deferred.
 
+## Change indicators
+
+`MagicKeys.origins[i]` records which file slot each key came from (`null` for added keys). It's carried
+through removals and appends but never serialized. Rows are marked **New** (no origin) or **Edited**
+(bytes differ from the original slot); keys that only shifted position aren't marked. The editor also shows
+a summary (`N added · N edited · N removed`), since removed keys have no row to mark.
+
 ## Open items
 
 - Story key names (`0x01–0x0C`) are unknown; the UI shows hex ids.
-- Suffix `0x38`: in the documented range but has no known name; verify in-game.
-- The example save has two entries with byte 0 = `0x00` and random-key-like bytes 1–3
-  (`00 09 1C 28`, `00 0E 05 63`). They're preserved as unknown entries; their meaning is not yet known.
+- Why some random keys have byte 0 = `0x00`.

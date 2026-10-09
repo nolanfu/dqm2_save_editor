@@ -130,4 +130,28 @@ describe('MagicKeysEditor', () => {
     expect(model.current).toBe(initial);
     expect(screen.getByRole('alert')).toHaveTextContent('No changes were made');
   });
+
+  it('marks new and edited keys and summarizes changes', async () => {
+    const user = userEvent.setup();
+    renderEditor(modelOf(story(1), story(2), story(3)));
+    expect(screen.queryByText(/Unsaved changes/)).not.toBeInTheDocument();
+    expect(screen.queryByText('Edited')).not.toBeInTheDocument();
+
+    await user.click(row(1).getByRole('button', { name: 'Remove key 1' }));
+    await user.click(row(2).getByLabelText('Completed'));
+    await user.click(screen.getByRole('button', { name: 'Add story key' }));
+
+    expect(row(1).queryByText(/^(New|Edited)$/)).not.toBeInTheDocument();
+    expect(row(2).getByText('Edited')).toBeInTheDocument();
+    expect(row(3).getByText('New')).toBeInTheDocument();
+    expect(screen.getByText(/Unsaved changes: 1 added · 1 edited · 1 removed/)).toBeInTheDocument();
+
+    await user.click(row(2).getByLabelText('Completed'));
+    expect(row(2).queryByText('Edited')).not.toBeInTheDocument();
+  });
+
+  it('notes random keys whose first byte lacks the random flag', () => {
+    renderEditor(modelOf(random(0, 9, 0x1c, 40, false, false)));
+    expect(row(1).getByText('Byte 0 flag unset')).toBeInTheDocument();
+  });
 });

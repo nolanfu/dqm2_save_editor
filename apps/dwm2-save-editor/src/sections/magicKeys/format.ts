@@ -15,7 +15,7 @@ export const STORY_ID_MIN = 0x01;
 export const STORY_ID_MAX = 0x0c;
 export const SERIAL_MAX = 0x3e;
 export const PREFIX_MAX = 0x0f;
-export const SUFFIX_MAX = 0x38;
+export const SUFFIX_MAX = 0x37;
 /** Highest valid level byte. Files may contain 0, but new or edited keys use 1–99. */
 export const LEVEL_MAX = 0x63;
 export const LEVEL_MIN_EDITABLE = 0x01;
@@ -30,23 +30,23 @@ export function decodeEntry(raw: RawEntry): KeySlot {
   const completed = (type & COMPLETED_FLAG) !== 0;
   const id = type & SERIAL_MASK;
 
-  if ((type & RANDOM_FLAG) === 0) {
-    if (
-      id >= STORY_ID_MIN &&
-      id <= STORY_ID_MAX &&
-      prefix === EMPTY_BYTE &&
-      suffix === EMPTY_BYTE &&
-      level === STORY_LEVEL_BYTE
-    ) {
-      return { kind: 'story', storyId: id, completed };
-    }
-  } else if (
-    id <= SERIAL_MAX &&
-    prefix <= PREFIX_MAX &&
-    suffix <= SUFFIX_MAX &&
-    level <= LEVEL_MAX
+  const randomFlag = (type & RANDOM_FLAG) !== 0;
+
+  if (
+    !randomFlag &&
+    id >= STORY_ID_MIN &&
+    id <= STORY_ID_MAX &&
+    prefix === EMPTY_BYTE &&
+    suffix === EMPTY_BYTE &&
+    level === STORY_LEVEL_BYTE
   ) {
-    return { kind: 'random', serial: id, prefix, suffix, level, completed };
+    return { kind: 'story', storyId: id, completed };
+  }
+
+  // Random keys are recognized by bytes 1–3. Byte 0 usually has the random flag, but real saves
+  // also contain random keys with byte 0 = 0x00, so the flag is recorded rather than required.
+  if (id <= SERIAL_MAX && prefix <= PREFIX_MAX && suffix <= SUFFIX_MAX && level <= LEVEL_MAX) {
+    return { kind: 'random', serial: id, prefix, suffix, level, completed, randomFlag };
   }
 
   return { kind: 'unknown', raw: [...raw] };
@@ -65,7 +65,7 @@ export function encodeEntry(slot: KeySlot): RawEntry {
       ];
     case 'random':
       return [
-        RANDOM_FLAG | (slot.completed ? COMPLETED_FLAG : 0) | slot.serial,
+        (slot.randomFlag ? RANDOM_FLAG : 0) | (slot.completed ? COMPLETED_FLAG : 0) | slot.serial,
         slot.prefix,
         slot.suffix,
         slot.level,

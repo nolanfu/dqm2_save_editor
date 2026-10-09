@@ -54,6 +54,7 @@ export function addRandomKey(model: MagicKeys, fields: RandomKeyFields): Operati
     serial: nextRandomSerial(model),
     ...fields,
     completed: false,
+    randomFlag: true,
   });
 }
 
@@ -61,8 +62,10 @@ export function addRandomKey(model: MagicKeys, fields: RandomKeyFields): Operati
 export function removeKey(model: MagicKeys, index: number): MagicKeys {
   assertIndex(model, index);
   const slots = model.slots.filter((_, i) => i !== index);
+  const origins = model.origins.filter((_, i) => i !== index);
   slots.push(EMPTY);
-  return { slots };
+  origins.push(null);
+  return { slots, origins };
 }
 
 export function setStoryId(model: MagicKeys, index: number, storyId: number): MagicKeys {
@@ -110,8 +113,10 @@ export function appendSlots(model: MagicKeys, newSlots: readonly KeySlot[]): Ope
     };
   }
   const slots = [...model.slots];
+  const origins = [...model.origins];
   slots.splice(used, newSlots.length, ...newSlots);
-  return { ok: true, model: { slots } };
+  origins.splice(used, newSlots.length, ...newSlots.map(() => null));
+  return { ok: true, model: { slots, origins } };
 }
 
 function appendSlot(model: MagicKeys, slot: KeySlot): OperationResult {
@@ -126,7 +131,7 @@ function updateSlot(
   assertIndex(model, index);
   const slots = [...model.slots];
   slots[index] = update(slots[index]!);
-  return { slots };
+  return { slots, origins: model.origins };
 }
 
 function assertIndex(model: MagicKeys, index: number): void {

@@ -1,14 +1,16 @@
 import { KEY_LIST_OFFSET, KEY_LIST_SIZE, KEY_SLOT_COUNT } from './format.ts';
 import type { KeySlot, MagicKeys } from './model.ts';
 
-/** Builds a model from the given filled slots, padded with empties to 32 slots. */
+/**
+ * Builds a model as if parsed from a file: the given filled slots, padded with empties to 32
+ * slots, each slot originating at its own index.
+ */
 export function modelOf(...slots: KeySlot[]): MagicKeys {
-  return {
-    slots: [
-      ...slots,
-      ...Array.from({ length: KEY_SLOT_COUNT - slots.length }, (): KeySlot => ({ kind: 'empty' })),
-    ],
-  };
+  const padded = [
+    ...slots,
+    ...Array.from({ length: KEY_SLOT_COUNT - slots.length }, (): KeySlot => ({ kind: 'empty' })),
+  ];
+  return { slots: padded, origins: padded.map((_, i) => i) };
 }
 
 /**
@@ -34,4 +36,5 @@ export const random = (
   suffix = 0,
   level = 1,
   completed = false,
-): KeySlot => ({ kind: 'random', serial, prefix, suffix, level, completed });
+  randomFlag = true,
+): KeySlot => ({ kind: 'random', serial, prefix, suffix, level, completed, randomFlag });
