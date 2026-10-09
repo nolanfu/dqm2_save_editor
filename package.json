@@ -15,7 +15,6 @@
     "preview": "npm run preview -w apps/dwm2-save-editor",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "npm run test:e2e -w apps/dwm2-save-editor",
     "typecheck": "tsc -b",
     "lint": "eslint .",
     "format": "prettier --write .",
@@ -24,7 +23,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "^1.64.0",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",

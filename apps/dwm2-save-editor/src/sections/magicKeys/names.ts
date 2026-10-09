@@ -24,7 +24,7 @@ const PREFIX_NAMES: Partial<Record<number, string>> = {
   0x0f: 'Last',
 };
 
-// Source: docs/dqm2_key_tables.txt. 0x38 is within the valid range but has no known name.
+// 0x38 is within the valid range but has no known name (unverified whether it occurs).
 const SUFFIX_NAMES: Partial<Record<number, string>> = {
   0x00: 'Slime',
   0x01: 'Draco',

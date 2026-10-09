@@ -4,5 +4,5 @@
     "tsBuildInfoFile": "../../node_modules/.tmp/dwm2-save-editor.tsbuildinfo",
     "types": ["node", "vite/client"]
   },
-  "include": ["src", "tests", "vite.config.ts", "vitest.setup.ts", "playwright.config.ts"]
+  "include": ["src", "tests", "vite.config.ts", "vitest.setup.ts"]
 }

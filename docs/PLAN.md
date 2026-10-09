@@ -1,6 +1,6 @@
 # DWM2 Save Editor — Plan
 
-Status: draft for review. Nothing scaffolded yet beyond `git init`.
+Status: milestones 1–4 done (except CI/Pages); end-to-end tests are deferred.
 
 ## Goals
 
@@ -13,17 +13,17 @@ Status: draft for review. Nothing scaffolded yet beyond `git init`.
 
 ## Tech stack
 
-| Concern                | Choice                                                             |
-| ---------------------- | ------------------------------------------------------------------ |
-| Language               | TypeScript (strict)                                                |
-| UI                     | React                                                              |
-| Build/dev server       | Vite                                                               |
-| Repo layout            | npm workspaces (npm 11 / Node 24 already installed)                |
-| Unit + component tests | Vitest + React Testing Library (jsdom)                             |
-| Property tests         | fast-check (IPS round-trips, codec round-trips)                    |
-| End-to-end tests       | Playwright (Chromium + mobile viewport) against `vite preview`     |
-| Lint/format            | ESLint (flat config, typescript-eslint) + Prettier                 |
-| CI/CD                  | GitHub Actions: lint, typecheck, test, e2e; deploy `main` to Pages |
+| Concern                | Choice                                                          |
+| ---------------------- | --------------------------------------------------------------- |
+| Language               | TypeScript (strict)                                             |
+| UI                     | React                                                           |
+| Build/dev server       | Vite                                                            |
+| Repo layout            | npm workspaces (npm 11 / Node 24 already installed)             |
+| Unit + component tests | Vitest + React Testing Library (jsdom)                          |
+| Property tests         | fast-check (IPS round-trips, codec round-trips)                 |
+| End-to-end tests       | Deferred (Playwright is the likely choice when we pick this up) |
+| Lint/format            | ESLint (flat config, typescript-eslint) + Prettier              |
+| CI/CD                  | GitHub Actions: lint, typecheck, test; deploy `main` to Pages   |
 
 Windows notes: npm scripts stay cross-platform (no `rm -rf`, no bash-only syntax). `.gitattributes` sets
 `* text=auto eol=lf` and marks `*.sav`, `*.srm`, `*.ips`, `*.bin` as `binary` so fixtures are never
@@ -41,7 +41,7 @@ dwm2_editors/
         diff/                  # changed-run detection between two buffers
         file/                  # readFileBytes(File), downloadBytes(bytes, name)
         sections/              # Section / FileDefinition interfaces, export pipeline
-        react/                 # FileDropZone, DownloadButton, AppShell, error display
+        react/                 # FileDropZone, EditorSection / SectionEditorProps types
   apps/
     dwm2-save-editor/
       src/
@@ -52,11 +52,12 @@ dwm2_editors/
             operations.ts      # pure edit operations
             presets.ts         # preset definitions
             names.ts           # id → name tables
-            MagicKeysSection.tsx + child components
-        app/                   # app state (reducer), section registry, layout
+            section.ts         # Section implementation (parse/serialize)
+            editorSection.ts   # Section + editor component
+            MagicKeysEditor.tsx, components/
+        app/                   # App shell, state reducer, section registry (sections.ts)
       tests/
         fixtures/              # example save files + expected-state JSON
-        e2e/                   # Playwright specs
   docs/
 ```
 
@@ -65,20 +66,22 @@ dwm2_editors/
 ### Section framework (in `core`)
 
 ```ts
+// @file-editor/core — no React dependency, usable for CLI/ROM tools too
 interface Section<TModel> {
   id: string;
   title: string;
   parse(bytes: Uint8Array): TModel; // read from the original file
   serialize(model: TModel, target: Uint8Array): void; // write into a copy of the file
-  Component: React.FC<{ model: TModel; original: TModel; onChange(next: TModel): void }>;
 }
 
-interface FileDefinition {
-  name: string;
-  sections: Section<unknown>[];
-  detect?(bytes: Uint8Array): boolean; // unused in v1 (no magic-byte validation)
+// @file-editor/core/react
+interface EditorSection<TModel> extends Section<TModel> {
+  Editor: ComponentType<{ original: TModel; model: TModel; onChange(next: TModel): void }>;
 }
 ```
+
+The app registers its sections in one object (`app/sections.ts`); state, rendering, and export are
+derived from it. File detection (magic bytes) is deferred.
 
 Rule every section must follow: **`serialize(parse(bytes))` must reproduce the original bytes exactly.**
 Unedited data then never shows up in the patch, and fixture-based tests can check that for every section.
@@ -89,13 +92,18 @@ One `useReducer` at the app root:
 
 ```ts
 {
-  file: { name: string; bytes: Uint8Array } | null;   // original, never mutated
-  sections: Record<SectionId, { original: Model; proposed: Model }>;
+  file: {
+    name: string;
+    bytes: Uint8Array;          // original, never mutated
+    original: SectionModels;    // parsed from the file
+    proposed: SectionModels;    // with the user's edits
+  } | null;
   error: string | null;
 }
 ```
 
-Keeping both `original` and `proposed` per section costs almost nothing, and it makes "dirty" indicators
+Whether anything changed is derived by running the export pipeline (cheap for a 32 KiB file), so
+edits that cancel out leave the download disabled. Keeping both `original` and `proposed` costs almost nothing, and it makes "dirty" indicators
 and a future diff view straightforward. A reload clears all state, which is acceptable.
 
 ### Export pipeline (in `core`)
@@ -171,11 +179,13 @@ gets exhaustive unit tests at every range boundary.
 ### Presets
 
 ```ts
-interface Preset<TModel> {
+interface Preset {
   id: string;
   label: string;
   description: string;
-  apply(model: TModel): { ok: true; model: TModel; summary: string } | { ok: false; error: string };
+  apply(
+    model: MagicKeys,
+  ): { ok: true; model: MagicKeys; message: string } | { ok: false; error: string };
 }
 ```
 
@@ -207,28 +217,29 @@ interface Preset<TModel> {
   (a golden file or a list of expected byte changes).
 - **Component tests (RTL):** rendering, edits dispatching the correct operations, preset error display,
   download button enable/disable.
-- **E2E (Playwright):** upload a fixture → apply the preset → edit a random key → download → read the
-  downloaded bytes and compare to the expected output. Runs on desktop and mobile viewports.
+- **App flow tests (RTL):** load → edit → download (with `downloadBytes` mocked) and compare output bytes.
+- **E2E:** deferred. When added: upload a fixture → apply the preset → edit → download → compare bytes,
+  on desktop and mobile viewports.
 
 ## Deployment
 
 - Vite `base` set for the Pages subpath (from the repo name); `npm run dev` / `npm run preview` for local use.
-- GitHub Actions: `ci.yml` (lint, typecheck, unit, e2e) on PRs and pushes; `pages.yml` builds and deploys
+- GitHub Actions: `ci.yml` (typecheck, lint, format check, unit tests) on PRs and pushes; `pages.yml` builds and deploys
   `apps/dwm2-save-editor` on `main`.
 - No runtime external resources (no CDN fonts or scripts), so after the first load it works fully on a local
   network. A PWA/offline mode can come later.
 
 ## Milestones
 
-1. **Scaffold:** workspaces, TS/ESLint/Prettier, Vitest, Playwright, `.gitattributes`, CI, an empty app
-   deployed to Pages.
-2. **Core:** bytes/diff/IPS/file helpers + section framework + export pipeline, fully unit-tested.
-3. **Magic key format:** codec, model, operations, presets, name tables; fixture tests.
-4. **UI:** loader, key list editor, presets, download; component tests.
-5. **E2E + polish:** Playwright flows, mobile layout pass, error states, README.
+1. ✅ **Scaffold:** workspaces, TS/ESLint/Prettier, Vitest, `.gitattributes`. (CI + Pages: in progress.)
+2. ✅ **Core:** bytes/diff/IPS/file helpers + section framework + export pipeline, fully unit-tested.
+3. ✅ **Magic key format:** codec, model, operations, presets, prefix/suffix names. Fixture tests pending.
+4. ✅ **UI:** loader, key list editor, presets, download; component tests; mobile layout checked.
+5. **Polish:** README, error states. E2E deferred.
 
 ## Open items
 
-- ID → name tables: story keys (`0x01–0x0C`), prefixes (`0x00–0x0F`), suffixes (`0x00–0x38`).
+- Story key names (`0x01–0x0C`).
 - Story IDs that count as "post-game".
+- Suffix `0x38`: in the documented range but has no known name; verify in-game.
 - Example save files (committed under `apps/dwm2-save-editor/tests/fixtures/`).
